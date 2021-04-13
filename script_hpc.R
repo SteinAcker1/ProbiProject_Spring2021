@@ -1,6 +1,6 @@
 library(dada2)
 
-path <- "~/probiData_local"
+path <- "~/probiData/ProGastro17"
 list.files(path)
 
 #Separating forward and reverse reads
@@ -46,13 +46,14 @@ seqtab <- makeSequenceTable(mergers)
 
 #Removing chimeras
 seqtab.nochim <- removeBimeraDenovo(seqtab, method="consensus", multithread=TRUE, verbose=TRUE)
-write.table(seqtab.nochim, file = "probiSeqs.tsv", sep = "\t")
+seqPath <- file.path(path, "output", "probiSeqs.tsv")
+write.table(seqtab.nochim, file = seqPath, sep = "\t")
 "Removed chimeras"
 
 #Assigning taxonomy with Silva database
 taxa <- assignTaxonomy(seqtab.nochim, "~/taxa_dada2/silva_nr99_v138.1_wSpecies_train_set.fa.gz", multithread=TRUE)
-write.table(taxa, file = "probiTaxa.tsv", sep = "\t")
-#taxa <- read.csv("~/Downloads/dada2_practice_taxa.tsv", sep = "\t")
+taxaPath <- file.path(path, "output", "probiTaxa.tsv")
+write.table(taxa, file = taxaPath, sep = "\t")
 "Assigned taxonomy"
 
 
