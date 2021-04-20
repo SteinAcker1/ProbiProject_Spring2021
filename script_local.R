@@ -1,6 +1,6 @@
 ### This script performs data fine-tuning in preparation for analysis. It can be run on a typical personal computer. ###
-
-library(tidyMicro)
+library(tidyverse)
+library(tidyMicro) #This version of tidyMicro was downloaded directly from the CharlieCarpenter/tidyMicro GitHub repository on 19 April 2021, rather than the CRAN repository
 
 ### Initial data handling ###
 

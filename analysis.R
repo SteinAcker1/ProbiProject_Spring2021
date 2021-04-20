@@ -1,6 +1,5 @@
 ### This script analyzes the output from script_local.R. It can also easily be run on a personal computer. ###
 source("script_local.R")
-library(tidyMicro) #This version of tidyMicro was downloaded directly from the CharlieCarpenter/tidyMicro GitHub repository on 19 April 2021, rather than the CRAN repository
 theme_set(theme_bw())
 
 ### Diversity analysis ###
