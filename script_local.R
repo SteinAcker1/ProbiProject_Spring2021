@@ -95,9 +95,8 @@ appendData <- function(df) {
       treat <- "PreTrial_1"
     } else if(period == "3") {
       treat <- "PreTrial_2"
-    }
-     else if(isTRUE(period == "2" & group == "Placebo - Lp299v") |
-             isTRUE(period == "4" & group == "Lp299v - Placebo")) {
+    } else if(isTRUE(period == "2" & group == "Placebo - Lp299v") | 
+              isTRUE(period == "4" & group == "Lp299v - Placebo")) {
       treat <- "Placebo"
     } else {
       treat <- "Lp299v"
@@ -109,10 +108,15 @@ appendData <- function(df) {
     indiv_overweight <- info$Overweight
     #Grabbing BSF info
     bsf_info <- subset(BSF.df, Screening.number == screeningNum)
-    if(period == "1") indiv_bsf <- bsf_info$BSF1
-    else if(period == "2") indiv_bsf <- bsf_info$BSF2
-    else if(period == "3") indiv_bsf <- bsf_info$BSF3
-    else indiv_bsf <- bsf_info$BSF4
+    if(period == "1") {
+      indiv_bsf <- bsf_info$BSF1
+    } else if(period == "2") {
+      indiv_bsf <- bsf_info$BSF2
+    } else if(period == "3") {
+      indiv_bsf <- bsf_info$BSF3
+    } else {
+      indiv_bsf <- bsf_info$BSF4
+    }
     #Appending grabbed info to vectors
     ScreenNums[i] <- paste("p", screeningNum, sep = "_")
     TestingPeriod[i] <- period
