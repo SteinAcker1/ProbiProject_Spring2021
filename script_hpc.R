@@ -1,3 +1,5 @@
+### This script performs initial data handling using FASTQ data. It is VERY computationally intensive and should be run on a very powerful computer. ###
+
 library(dada2)
 
 path <- "~/probiData/ProGastro17"
