@@ -5,4 +5,5 @@ Repository for code used in my Spring 2021 bioinformatics research project at Lu
 ## Required Packages
 
 DADA2 (https://github.com/benjjneb/dada2) <br>
-tidyMicro (https://github.com/CharlieCarpenter/tidyMicro)
+tidyMicro (https://github.com/CharlieCarpenter/tidyMicro) <br>
+tidyverse (https://github.com/tidyverse/tidyverse)
