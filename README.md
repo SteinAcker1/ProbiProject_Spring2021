@@ -6,4 +6,5 @@ Repository for code used in my Spring 2021 bioinformatics research project at Lu
 
 DADA2 (https://github.com/benjjneb/dada2) <br>
 tidyMicro (https://github.com/CharlieCarpenter/tidyMicro) <br>
-tidyverse (https://github.com/tidyverse/tidyverse)
+tidyverse (https://github.com/tidyverse/tidyverse) <br>
+DESeq2 (https://github.com/mikelove/DESeq2)
