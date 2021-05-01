@@ -167,6 +167,28 @@ getChange <- function(prop.df, exclude = TRUE) {
   return(changes)
 }
 
+evalChanges <- function(change_list) {
+  N_taxa <- length(change_list)
+  measures <- c("taxon", "diff", "CI95_lower", "CI95_upper", "p_val")
+  results_mat <- matrix(nrow = N_taxa, ncol = length(measures))
+  colnames(results_mat) <- measures
+  for(i in 1:N_taxa) {
+    matrix <- change_list[[i]]
+    taxon <- names(change_list[i])
+    t_results <- t.test(matrix[,"Treatment"], matrix[,"Placebo"], paired = TRUE) #outputs mean change from using treatment over placebo
+    diff <- t_results$estimate[[1]]
+    CI95_lower <- t_results$conf.int[1]
+    CI95_upper <- t_results$conf.int[2]
+    p_val <- t_results$p.value
+    print(c(taxon, diff, CI95_lower, CI95_upper, p_val))
+    results_mat[i,] <- c(taxon, diff, CI95_lower, CI95_upper, p_val)
+  }
+  print(head(results_mat))
+  p_adj <- p.adjust(results_mat[,"p_val"], method = "fdr")
+  results.df <- data.frame(results_mat, p_adj)
+  return(results.df)
+}
+
 
 
 

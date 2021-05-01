@@ -20,4 +20,6 @@ genusProp.df <- countToProp(genusCount.df)
 phylumProp_appended.df <- appendData(phylumProp.df)
 genusProp_appended.df <- appendData(genusProp.df)
 
+phylumChanges <- getChange(phylumProp_appended.df)
+genusChanges <- getChange(genusProp_appended.df)
 
