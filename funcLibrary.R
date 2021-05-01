@@ -124,28 +124,47 @@ appendData <- function(df) {
 }
 
 # Calculates the change in abundance of each taxon in each individual in response to both placebo and Lp299v
-# STILL IN PROGRESS
 getChange <- function(prop.df, exclude = TRUE) {
+  raw_participants <- unique(prop.df$Participant)
   if(exclude) {
+    # filter out participants who did not provide all 4 samples
     completeness <- prop.df$Participant %>%
       factor() %>%
       summary()
-    participants <- names(completeness)
     incomplete_rows <- c()
-    for(i in participants) {
+    for(i in raw_participants) {
       if(completeness[i] != 4) {
         incomplete_rows <- c(incomplete_rows, i)
       }
     }
     prop.df <- filter(prop.df, !(Participant %in% incomplete_rows))
   }
+  participants <- unique(prop.df$Participant)
   changes <- list()
-  N <- ncol(prop.df)
-  for(i in 1:N) {
+  taxa <- setdiff(colnames(prop.df), colnames(clinical.df))
+  for(taxon in taxa) {
     mat <- matrix(ncol = 2, nrow = nrow(prop.df) / 4)
     colnames(mat) <- c("Placebo", "Treatment")
-    
+    for(i in 1:length(participants)) {
+      participantInfo.df <- prop.df %>%
+        filter(Participant == participants[i])
+      if(participantInfo.df[1,]$TestingOrder == "Placebo - Lp299v") {
+        placebo_change <- filter(participantInfo.df, Treatment == "Placebo")[,taxon] -
+          filter(participantInfo.df, Treatment == "PreTrial_1")[,taxon]
+        treatment_change <- filter(participantInfo.df, Treatment == "Lp299v")[,taxon] -
+          filter(participantInfo.df, Treatment == "PreTrial_2")[,taxon]
+      } else {
+        treatment_change <- filter(participantInfo.df, Treatment == "Lp299v")[,taxon] -
+          filter(participantInfo.df, Treatment == "PreTrial_1")[,taxon]
+        placebo_change <- filter(participantInfo.df, Treatment == "Placebo")[,taxon] -
+          filter(participantInfo.df, Treatment == "PreTrial_2")[,taxon]
+      }
+      mat[i,1] <- placebo_change
+      mat[i,2] <- treatment_change
+    }
+    changes[[taxon]] <- mat
   }
+  return(changes)
 }
 
 
