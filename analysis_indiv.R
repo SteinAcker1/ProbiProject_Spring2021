@@ -1,18 +1,24 @@
 source("script_local.R")
 #Use this script to do analysis for individuals
 
-counts_indiv.df <- genusCount.df %>%
-  t() %>%
-  filter(isFALSE(endswith("NA", row.names())))
+### Preliminary DESeq2 code that may or may not be further developed
+# counts_indiv.df <- genusCount.df %>%
+#   t() %>%
+#   filter(isFALSE(endswith("NA", row.names())))
+# 
+# ddsFullCountTable <- DESeqDataSetFromMatrix( countData = counts_indiv.df,
+#                                              colData = clinical.df,
+#                                              design = ~ Participant + Treatment)
+# 
+# output <- DESeq(ddsFullCountTable)
+# result <- results(output)
 
-ddsFullCountTable <- DESeqDataSetFromMatrix( countData = counts_indiv.df,
-                                             colData = clinical.df,
-                                             design = ~ Participant + Treatment)
+### Getting changes in Shannon's H at genus and phylum level
 
-output <- DESeq(ddsFullCountTable)
-result <- results(output)
+genus_shannonH <- analyzeDiversityChange(tidymicro.df, "Genus")
+phylum_shannonH <- analyzeDiversityChange(tidymicro.df, "Phylum")
 
-# Coding from scratch
+### Getting taxon-level changes
 
 # Generating a sequence matrix with NAs scrubbed out at each taxonomic level
 seqsPhylum.df <- filterNA(quo(Phylum))
@@ -44,18 +50,18 @@ genusProp_appended.df <- appendData(genusProp.df)
 
 # Performing statistical analysis on proportion matrices
 phylumChanges.df <- phylumProp_appended.df %>%
-  getChange() %>%
-  evalChange()
+  getTaxonChange() %>%
+  evalTaxonChange()
 classChanges.df <- classProp_appended.df %>%
-  getChange() %>%
-  evalChange()
+  getTaxonChange() %>%
+  evalTaxonChange()
 orderChanges.df <- orderProp_appended.df %>%
-  getChange() %>%
-  evalChange()
+  getTaxonChange() %>%
+  evalTaxonChange()
 familyChanges.df <- familyProp_appended.df %>%
-  getChange() %>%
-  evalChange()
+  getTaxonChange() %>%
+  evalTaxonChange()
 genusChanges.df <- genusProp_appended.df %>%
-  getChange() %>%
-  evalChange()
+  getTaxonChange() %>%
+  evalTaxonChange()
 
