@@ -18,6 +18,27 @@ source("script_local.R")
 genus_shannonH <- analyzeDiversityChange(tidymicro.df, "Genus")
 phylum_shannonH <- analyzeDiversityChange(tidymicro.df, "Phylum")
 
+boxplot(genus_shannonH[[1]],
+        main = "Genus-level diversity change",
+        sub = paste("p = ", round(genus_shannonH[[2]]$p.value, 4)),
+        xlab = "Phase",
+        ylab = "Change in Shannon's H")
+
+boxplot(phylum_shannonH[[1]],
+        main = "Phylum-level diversity change",
+        sub = paste("p = ", round(phylum_shannonH[[2]]$p.value, 4)),
+        xlab = "Phase",
+        ylab = "Change in Shannon's H")
+
+### F/B Ratio
+
+fb <- getFBchange(phylumProp_appended.df)
+boxplot(fb[[1]],
+        main = "F/B ratio change",
+        sub = paste("p = ", round(fb[[2]]$p.value, 4)),
+        xlab = "Phase",
+        ylab = "Change in F/B ratio")
+
 ### Getting taxon-level changes
 
 # Generating a sequence matrix with NAs scrubbed out at each taxonomic level
@@ -65,3 +86,7 @@ genusChanges.df <- genusProp_appended.df %>%
   getTaxonChange() %>%
   evalTaxonChange()
 
+# genus <- genusProp_appended.df %>%
+#   getTaxonChange()
+# family <- familyProp_appended.df%>%
+#   getTaxonChange()

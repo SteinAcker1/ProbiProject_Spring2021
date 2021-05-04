@@ -221,4 +221,16 @@ analyzeDiversityChange <- function(tidy.df,
   return(output)
 }
 
-
+getFBchange <- function(phylum.df) {
+  phylum.df <- filterIncompletes(phylum.df)
+  participants <- unique(phylum.df$Participant)
+  phylum.df$FBratio <- phylum.df$Firmicutes / phylum.df$Bacteroidota
+  FBchange.mat <- findDiffs(data.df = phylum.df,
+                            measure = "FBratio",
+                            particips = participants)
+  t_results <- t.test(FBchange.mat[,"Treatment"],
+                      FBchange.mat[,"Placebo"],
+                      paired = TRUE)
+  output <- list(FBchange.mat, t_results)
+  return(output)
+}
