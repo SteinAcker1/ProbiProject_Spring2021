@@ -285,7 +285,7 @@ getLPstatus <- function(df = genusProp_appended.df) {
               isTRUE(row["TestingPeriod"] == "1" & row["TestingOrder"] == "Lp299v - Placebo")) {
       treatmentNew[i] <- "PreLp299v"
     } else {
-      treatmentNew[i] <- row["Treatment"]
+      treatmentNew[i] <- row["Treatment"][[1]]
     }
   }
   lp.df <- df %>%

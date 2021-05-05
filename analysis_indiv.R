@@ -95,4 +95,11 @@ Lplantarum.mat <- genusCount.df %>%
             fold = F)
 
 Lp_present.df <- getLPstatus()
+with(Lp_present.df, chisq.test(Treatment, Lp_present))
+
+Lp_present_active.df <- filter(Lp_present.df, Treatment == "Lp299v")
+with(Lp_present_active.df, chisq.test(Overweight, Lp_present))
+with(Lp_present_active.df, chisq.test(Site, Lp_present))
+with(Lp_present_active.df, chisq.test(Gender, Lp_present))
+t.test(BSF ~ Lp_present, data = Lp_present_active.df)
 
