@@ -49,6 +49,19 @@ countToProp <- function(count) {
 
 # Appends clinical data to a given dataframe
 appendData <- function(df) {
+  #Save Lp299v as a variable and see if it should be evaluated
+  Lp_names <- c("Firmicutes/Bacilli/Lactobacillales/Lactobacillaceae/Lactiplantibacillus",
+                "Firmicutes.Bacilli.Lactobacillales.Lactobacillaceae.Lactiplantibacillus")
+  if(Lp_names[1] %in% colnames(df)) {
+    Lp_name <- Lp_names[1]
+    eval_Lp <- TRUE
+  } else if(Lp_names[2] %in% colnames(df)) {
+    Lp_name <- Lp_names[2]
+    eval_Lp <- TRUE
+  } else {
+    eval_Lp <- FALSE
+  }
+  if(eval_Lp) Lp_present <- c()
   #Create empty vectors
   ScreenNums <- c()
   TestingPeriod <- c()
@@ -96,6 +109,15 @@ appendData <- function(df) {
     } else {
       indiv_bsf <- bsf_info$BSF4
     }
+    #Appending value to see if L. plantarum is present
+    if(eval_Lp) {
+      if(df[i,Lp_name] != 0) {
+        Lplantarum = TRUE
+      } else {
+        Lplantarum = FALSE
+      }
+      Lp_present[i] <- Lplantarum
+    }
     #Appending grabbed info to vectors
     ScreenNums[i] <- paste("p", screeningNum, sep = "_")
     TestingPeriod[i] <- period
@@ -119,13 +141,14 @@ appendData <- function(df) {
   df$Site <- Site
   df$BSF <- BSF
   df$Overweight <- Overweight
+  if(eval_Lp) df$Lp_present <- Lp_present
   #Return the altered dataframe
   return(df)
 }
 
+# filter out participants who did not provide all 4 samples
 filterIncompletes <- function(data.df) {
   raw_participants <- unique(data.df$Participant)
-  # filter out participants who did not provide all 4 samples
   completeness <- data.df$Participant %>%
     factor() %>%
     summary()
@@ -139,22 +162,38 @@ filterIncompletes <- function(data.df) {
   return(clean.df)
 }
 
-findDiffs <- function(data.df, measure, particips) {
+# Finds the change in a certain measure for each individual
+findDiffs <- function(data.df, measure, particips = unique(data.df$Participant), fold = FALSE) {
+  if(fold) warning("You have selected the \"fold\" option. This adds a pseudocount of +1 to both the numerator and denominator, so it should not be used with proportion tables.")
   mat <- matrix(ncol = 2, nrow = nrow(data.df) / 4)
   colnames(mat) <- c("Placebo", "Treatment")
   for(i in 1:length(particips)) {
     participantInfo.df <- data.df %>%
       filter(Participant == particips[i])
-    if(participantInfo.df[1,]$TestingOrder == "Placebo - Lp299v") {
-      placebo_change <- filter(participantInfo.df, Treatment == "Placebo")[,measure] -
-        filter(participantInfo.df, Treatment == "PreTrial_1")[,measure]
-      treatment_change <- filter(participantInfo.df, Treatment == "Lp299v")[,measure] -
-        filter(participantInfo.df, Treatment == "PreTrial_2")[,measure]
+    if(fold) {
+      if(participantInfo.df[1,]$TestingOrder == "Placebo - Lp299v") {
+        placebo_change <- (filter(participantInfo.df, Treatment == "Placebo")[,measure] + 1) /
+          (filter(participantInfo.df, Treatment == "PreTrial_1")[,measure] + 1)
+        treatment_change <- (filter(participantInfo.df, Treatment == "Lp299v")[,measure] + 1) /
+          (filter(participantInfo.df, Treatment == "PreTrial_2")[,measure] + 1)
+      } else {
+        treatment_change <- (filter(participantInfo.df, Treatment == "Lp299v")[,measure] + 1) /
+          (filter(participantInfo.df, Treatment == "PreTrial_1")[,measure] + 1)
+        placebo_change <- (filter(participantInfo.df, Treatment == "Placebo")[,measure] + 1) /
+          (filter(participantInfo.df, Treatment == "PreTrial_2")[,measure] + 1)
+      }
     } else {
-      treatment_change <- filter(participantInfo.df, Treatment == "Lp299v")[,measure] -
-        filter(participantInfo.df, Treatment == "PreTrial_1")[,measure]
-      placebo_change <- filter(participantInfo.df, Treatment == "Placebo")[,measure] -
-        filter(participantInfo.df, Treatment == "PreTrial_2")[,measure]
+      if(participantInfo.df[1,]$TestingOrder == "Placebo - Lp299v") {
+        placebo_change <- filter(participantInfo.df, Treatment == "Placebo")[,measure] -
+          filter(participantInfo.df, Treatment == "PreTrial_1")[,measure]
+        treatment_change <- filter(participantInfo.df, Treatment == "Lp299v")[,measure] -
+          filter(participantInfo.df, Treatment == "PreTrial_2")[,measure]
+      } else {
+        treatment_change <- filter(participantInfo.df, Treatment == "Lp299v")[,measure] -
+          filter(participantInfo.df, Treatment == "PreTrial_1")[,measure]
+        placebo_change <- filter(participantInfo.df, Treatment == "Placebo")[,measure] -
+          filter(participantInfo.df, Treatment == "PreTrial_2")[,measure]
+      }
     }
     mat[i,1] <- placebo_change
     mat[i,2] <- treatment_change
@@ -164,7 +203,7 @@ findDiffs <- function(data.df, measure, particips) {
 
 # Calculates the change in abundance of each taxon in each individual in response to both placebo and Lp299v
 # This function returns a list with matrices for each taxon showing the change in abundance in response to both the treatment and placebo
-getTaxonChange <- function(prop.df, exclude = TRUE) {
+getTaxonChange <- function(prop.df) {
   prop.df <- filterIncompletes(prop.df)
   participants <- unique(prop.df$Participant)
   changes <- list()
@@ -234,3 +273,36 @@ getFBchange <- function(phylum.df) {
   output <- list(FBchange.mat, t_results)
   return(output)
 }
+
+getLPstatus <- function(df = genusProp_appended.df) {
+  treatmentNew <- c()
+  for(i in 1:nrow(df)) {
+    row <- df[i,]
+    if(isTRUE(row["TestingPeriod"] == "1" & row["TestingOrder"] == "Placebo - Lp299v") | 
+       isTRUE(row["TestingPeriod"] == "3" & row["TestingOrder"] == "Lp299v - Placebo")) {
+      treatmentNew[i] <- "PrePlacebo"
+    } else if(isTRUE(row["TestingPeriod"] == "3" & row["TestingOrder"] == "Placebo - Lp299v") | 
+              isTRUE(row["TestingPeriod"] == "1" & row["TestingOrder"] == "Lp299v - Placebo")) {
+      treatmentNew[i] <- "PreLp299v"
+    } else {
+      treatmentNew[i] <- row["Treatment"]
+    }
+  }
+  lp.df <- df %>%
+    select(Participant,
+           TestingPeriod,
+           TestingOrder,
+           Treatment,
+           Gender,
+           Age,
+           BMI,
+           Site,
+           BSF,
+           Overweight,
+           Lp_present) %>%
+    mutate(Treatment = treatmentNew)
+  return(lp.df)
+}
+
+
+

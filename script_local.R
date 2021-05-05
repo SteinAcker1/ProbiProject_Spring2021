@@ -21,13 +21,6 @@ for(name in rownames(seqsRaw.df)) {
 rownames(seqsRaw.df) <- ids
 
 #Remove the reads where Order was not identified to clean data up
-filterNA <- function(taxlevel = quo(Order)) {
-  NAs <- taxa.df %>%
-    filter(endsWith(!!taxlevel, "NA")) %>%
-    rownames()
-  filteredSeqs.df <- seqsRaw.df[setdiff(colnames(seqsRaw.df),NAs)]
-  return(filteredSeqs.df)
-}
 seqs.df <- filterNA()
 
 #Cleaning up the demographic data so that it can be used in analysis

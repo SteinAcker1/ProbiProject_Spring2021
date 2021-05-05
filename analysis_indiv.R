@@ -86,7 +86,13 @@ genusChanges.df <- genusProp_appended.df %>%
   getTaxonChange() %>%
   evalTaxonChange()
 
-# genus <- genusProp_appended.df %>%
-#   getTaxonChange()
-# family <- familyProp_appended.df%>%
-#   getTaxonChange()
+# Analysis on L. plantarum
+
+Lplantarum.mat <- genusCount.df %>%
+  appendData() %>%
+  filterIncompletes() %>%
+  findDiffs(measure = "Firmicutes/Bacilli/Lactobacillales/Lactobacillaceae/Lactiplantibacillus",
+            fold = F)
+
+Lp_present.df <- getLPstatus()
+
