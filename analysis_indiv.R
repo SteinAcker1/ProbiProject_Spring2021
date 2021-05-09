@@ -1,5 +1,7 @@
 source("script_local.R")
 library(ggfortify)
+library(viridis)
+theme_set(theme_bw())
 #Use this script to do analysis for individuals
 
 ### Preliminary DESeq2 code that may or may not be further developed
@@ -71,19 +73,19 @@ familyProp_appended.df <- appendData(familyProp.df)
 genusProp_appended.df <- appendData(genusProp.df)
 
 # Performing statistical analysis on proportion matrices
-phylumChanges.df <- phylumProp_appended.df %>%
+phylumChanges <- phylumProp_appended.df %>%
   getTaxonChange() %>%
   evalTaxonChange()
-classChanges.df <- classProp_appended.df %>%
+classChanges <- classProp_appended.df %>%
   getTaxonChange() %>%
   evalTaxonChange()
-orderChanges.df <- orderProp_appended.df %>%
+orderChanges <- orderProp_appended.df %>%
   getTaxonChange() %>%
   evalTaxonChange()
-familyChanges.df <- familyProp_appended.df %>%
+familyChanges <- familyProp_appended.df %>%
   getTaxonChange() %>%
   evalTaxonChange()
-genusChanges.df <- genusProp_appended.df %>%
+genusChanges <- genusProp_appended.df %>%
   getTaxonChange() %>%
   evalTaxonChange()
 
@@ -104,12 +106,28 @@ with(Lp_present_active.df, chisq.test(Site, Lp_present))
 with(Lp_present_active.df, chisq.test(Gender, Lp_present))
 t.test(BSF ~ Lp_present, data = Lp_present_active.df)
 
+# Differences based on demographics
+test <- getDemographicDiff(phylumProp.df, "Gender")
+
 # Principal component analysis
 genusProp_appended_start.df <- filter(genusProp_appended.df, Treatment == "PreTrial_1")
 genusProp_appended_Lp299v.df <- filter(genusProp_appended.df, Treatment == "Lp299v")
 
-genus.pca <- prcomp(select(genusProp_appended_Lp299v.df, -c(colnames(clinical.df[,-1]), Lp_present,
+genus_Lp.pca <- prcomp(select(genusProp_appended_Lp299v.df, -c(colnames(clinical.df[,-1]), Lp_present,
                                                             Firmicutes.Bacilli.Lactobacillales.Lactobacillaceae.Lactiplantibacillus)),
                     scaled <- TRUE)
-autoplot(genus.pca, data = genusProp_appended_Lp299v.df, colour = 'Lp_present') +
+autoplot(genus_Lp.pca, data = genusProp_appended_Lp299v.df, colour = 'Lp_present') +
   ggtitle("Genus-level PCA")
+
+genus_start.pca <- prcomp(select(genusProp_appended_start.df, -c(colnames(clinical.df[,-1]), Lp_present,
+                                                               Firmicutes.Bacilli.Lactobacillales.Lactobacillaceae.Lactiplantibacillus)),
+                       scaled <- TRUE)
+autoplot(genus_start.pca, data = genusProp_appended_start.df, colour = 'BMI') +
+  ggtitle("Genus-level PCA") +
+  scale_color_viridis(discrete = FALSE)
+autoplot(genus_start.pca, data = genusProp_appended_start.df, colour = 'Age') +
+  ggtitle("Genus-level PCA") +
+  scale_color_viridis(discrete = FALSE)
+autoplot(genus_start.pca, data = genusProp_appended_start.df, colour = 'Gender') +
+  ggtitle("Genus-level PCA") +
+  scale_color_viridis(discrete = TRUE)
