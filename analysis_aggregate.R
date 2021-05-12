@@ -1,6 +1,5 @@
 ### This script analyzes the output from script_local.R. It can also easily be run on a personal computer. ###
 source("script_local.R")
-theme_set(theme_bw())
 
 ### Diversity analysis ###
 
@@ -74,7 +73,106 @@ micro_rocky_mtn(nb_order2, Treatment, alpha = 0.001) + ggtitle("Rocky Mountain p
 micro_forest(nb_order2, Treatment) + ggtitle("Forest plot of Lp299v strain impact",
                                              subtitle = "Period 2, Order-level analysis")
 
+### Redundancy analysis ###
+
+# Gender
+
+genusProp_appended_start.df <- filter(genusProp_appended.df, Treatment == "PreTrial_1")
+
+genusProp_appended_start_pca.df <- genusProp_appended_start.df %>%
+  select(-c(colnames(clinical.df[,-1]),
+            Lp_present,
+            Firmicutes.Bacilli.Lactobacillales.Lactobacillaceae.Lactiplantibacillus)) %>%
+  select_if(function(col) max(col) != 0)
+
+gender.rda <- rda(genusProp_appended_start_pca.df ~ Gender,
+                  data = genusProp_appended_start.df,
+                  scale = TRUE)
+
+RsquareAdj(gender.rda)
+anova(gender.rda)
+
+# Lp299v
+clinical_Lp299v.df <- filter(clinical.df, Treatment == "Lp299v")
+
+genusProp_appended_Lp299v_pca.df <- genusCount_appended.df %>%
+  filter(Treatment == "Lp299v") %>%
+  select(-c(colnames(clinical.df[,-1]),
+            Lp_present)) %>%
+  select_if(function(col) max(col) != 0) %>%
+  select(!ends_with("Lactiplantibacillus")) %>%
+  countToProp() #converting back to prop table after eliminating L. plantarum just to control for ANY extraneous impact of including Lp in calculations
+
+lp299v.rda <- rda(genusProp_appended_Lp299v_pca.df ~ Lp_present,
+                  scale = TRUE,
+                  data = clinical_Lp299v.df,
+                  na.rm = TRUE)
+
+lp299v_rda_plot <- autoplot(lp299v.rda)
+lp299v_rda_plot$layers[[3]] <- NULL
+lp299v_rda_plot
+anova <- anova(lp299v.rda)
+#Note that ANOVA is calculated stochastically for RDA objects. Therefore, the one you calculate may vary slightly from the reported value.
+plot(lp299v.rda)
+title("Redundancy analysis on Lp299v treatment phase (Genus-level analysis)",
+      sub = paste("p =", anova$`Pr(>F)`[1]))
+
+### Extraneous tidyMicro analyses involving probiotics ###
+tidymicro_Lp299v.df <- filter(tidymicro.df, Treatment == "Lp299v")%>%
+  mutate(Overweight = factor(ifelse(Overweight, "yes", "no"))) %>%
+  mutate(Lp_present = factor(ifelse(Lp_present, "yes", "no"))) %>%
+  mutate(Gender = factor(Gender))
+
+# Correlation matrix
+
+cor_heatmap(tidymicro_Lp299v.df, table = "Order", BMI, Age, BSF) +
+  scale_fill_viridis(option = "magma") +
+  ggtitle("Order-level Correlation Plot",
+          subtitle = "Lp299v phase")
+
+# Beta diversity
+Lp299v_beta <- beta_div(tidymicro_Lp299v.df, table = "Genus", method = "bray")
+Lp299v_beta %>%
+  beta_heatmap(micro_set = tidymicro_Lp299v.df, Lp_present) +
+  scale_fill_viridis(option = "magma") +
+  ggtitle("Beta diversity analysis by Lp299v status",
+          subtitle = "Genus-level analysis")
+
+# Taxa barplot
+ra_bars(tidymicro_Lp299v.df,
+        table = "Genus",
+        Lp_present,
+        top_taxa = 15)
+
 ### Analyses not involving probiotics ###
+tidymicro_period1.df <- filter(tidymicro.df, TestingPeriod == "1")%>%
+  mutate(Overweight = factor(ifelse(Overweight, "yes", "no"))) %>%
+  mutate(Gender = factor(Gender))
+
+cor_heatmap(tidymicro_period1.df, table = "Order", BMI, Age, BSF) +
+  scale_fill_viridis(option = "magma") +
+  ggtitle("Order-level Correlation Plot",
+          subtitle = "Testing Period 1")
+
+# Alpha diversity
+period1_alpha <- alpha_div(tidymicro_period1.df,
+                           table = "Genus",
+                           min_depth = 5000,
+                           min_goods = 80)
+alphareg <- micro_alpha_reg(period1_alpha,
+                            table = "Genus",
+                            Age,
+                            BMI,
+                            BSF)
+
+# Beta diversity
+period1_beta <- beta_div(tidymicro_period1.df, table = "Genus", method = "bray")
+period1_beta %>%
+  beta_heatmap(micro_set = tidymicro_period1.df, Gender) +
+  scale_fill_viridis(option = "magma") +
+  ggtitle("Beta diversity analysis by gender",
+          subtitle = "Genus-level analysis, Period 1")
+
 cor_rocky_mtn(subset(tidymicro.df, TestingPeriod == "1"), table = "Family", BMI)
 nb_class_bmi <- nb_mods(subset(tidymicro.df, TestingPeriod == "1"), table = "Class", Overweight)
 micro_rocky_mtn(nb_class_bmi, Overweight, alpha = 0.001)
@@ -98,7 +196,7 @@ cor_rocky_mtn(subset(tidymicro.df, TestingPeriod == "1"), table = "Family", BSF)
 # summary(lm)
 # plot(x = phylumProp_appended.df$BMI, y = phylumProp_appended.df$FBratio)
 # 
-# lm_bsf <- lm(FBratio ~ BSF, data = subset(phylumProp_appended.df, Treatment == "Placebo"))
+# lm_bsf <- lm(FBratio ~ BSF, data = subset(phylumProp_appended.df, Treatment == "PreTrial_1"))
 # summary(lm_bsf)
 # 
 # lm_agebmi <- lm(BMI ~ Age, data = subset(phylumProp_appended.df, Treatment == "Placebo"))

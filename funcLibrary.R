@@ -2,6 +2,10 @@
 library(tidyverse)
 library(tidyMicro) #This version of tidyMicro was downloaded directly from the CharlieCarpenter/tidyMicro GitHub repository on 19 April 2021, rather than the CRAN repository
 library(DESeq2)
+library(vegan)
+library(ggvegan) #This version of tidyMicro was downloaded directly from the gavinsimpson/ggvegan GitHub repository on 10 May 2021
+library(viridis)
+library(ggfortify)
 
 # Eliminates reads which DADA2 failed to identify at the Order level or below
 filterNA <- function(taxlevel = quo(Order)) {
@@ -238,9 +242,7 @@ evalTaxonChange <- function(change_list) {
   }
   p_adj <- p.adjust(results_mat[,"p_val"], method = "fdr")
   results_mat <- cbind(results_mat, p_adj)
-#  results_mat <- sapply(results_mat[,2:6], as.numeric)
   results.df <- data.frame(results_mat)
-  class(results.df) <- "TaxonTestResults"
   return(results.df)
 }
 
@@ -313,7 +315,7 @@ getLPstatus <- function(df = genusProp_appended.df) {
 getDemographicDiff <- function(data.df, var, treat = "PreTrial_1") {
   treat.df <- data.df %>%
     appendData() %>%
-    filter(Treatment == treat)
+    filter(Treatment %in% treat)
   taxa <- setdiff(colnames(treat.df), c(colnames(clinical.df), "Lp_present"))
   tax_name <- c()
   group1_name <- c()
@@ -336,7 +338,7 @@ getDemographicDiff <- function(data.df, var, treat = "PreTrial_1") {
                            group2_name,
                            group2_mean,
                            p_value) %>%
-    mutate(p_adj = p.adjust(p_value, method = "fdr"))
+    mutate(p_adj = p.adjust(p_value, method = "bonferroni"))
   return(results.df)
 }
 

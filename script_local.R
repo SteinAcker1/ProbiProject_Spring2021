@@ -1,15 +1,16 @@
 ### This script performs data fine-tuning in preparation for analysis. It can be run on a typical personal computer. ###
 source("funcLibrary.R")
+theme_set(theme_bw())
 
 ### Initial data handling ###
 
 #Loading data and formatting it properly (this takes a little while)
-taxa.df <- read.csv("~/probiData/ProGastro17/output/probiTaxa.tsv", sep = "\t") %>%
+taxa.df <- read.csv("~/probiData/ProGastro17/output_silva_nospecies/probiTaxa.tsv", sep = "\t") %>%
   mutate(Class = paste(Phylum, Class, sep = "/")) %>%
   mutate(Order = paste(Class, Order, sep = "/")) %>%
   mutate(Family = paste(Order, Family, sep = "/")) %>%
   mutate(Genus = paste(Family, Genus, sep = "/"))
-seqsRaw.df <- read.csv("~/probiData/ProGastro17/output/probiSeqs.tsv", sep = "\t")
+seqsRaw.df <- read.csv("~/probiData/ProGastro17/output_silva_nospecies/probiSeqs.tsv", sep = "\t")
 
 #Getting a list of IDs
 ids <- c()
@@ -33,11 +34,16 @@ BSF.df$Screening.number <- as.character(BSF.df$Screening.number)
 ### Creating dataframes to be used in analysis ###
 
 #Producing count and classic OTU dataframes
-phylumCount.df <- countTaxa(taxa = taxa.df, seqs = seqs.df, level = "Phylum")
-classCount.df <- countTaxa(taxa = taxa.df, seqs = seqs.df, level = "Class")
-orderCount.df <- countTaxa(taxa = taxa.df, seqs = seqs.df, level = "Order")
-familyCount.df <- countTaxa(taxa = taxa.df, seqs = seqs.df, level = "Family")
-genusCount.df <- countTaxa(taxa = taxa.df, seqs = seqs.df, level = "Genus")
+phylumCount.df <- countTaxa(taxa = taxa.df, seqs = seqs.df, level = "Phylum") %>%
+  select(-ends_with("NA"))
+classCount.df <- countTaxa(taxa = taxa.df, seqs = seqs.df, level = "Class") %>%
+  select(-ends_with("NA"))
+orderCount.df <- countTaxa(taxa = taxa.df, seqs = seqs.df, level = "Order") %>%
+  select(-ends_with("NA"))
+familyCount.df <- countTaxa(taxa = taxa.df, seqs = seqs.df, level = "Family") %>%
+  select(-ends_with("NA"))
+genusCount.df <- countTaxa(taxa = taxa.df, seqs = seqs.df, level = "Genus") %>%
+  select(-ends_with("NA"))
 
 phylumOTU.df <- getOTUtable(phylumCount.df)
 classOTU.df <- getOTUtable(classCount.df)
@@ -45,8 +51,25 @@ orderOTU.df <- getOTUtable(orderCount.df)
 familyOTU.df <- getOTUtable(familyCount.df)
 genusOTU.df <- getOTUtable(genusCount.df)
 
-#Producing clinical data dataframe
-clinical.df <- appendData(data.frame(ids = ids, row.names = ids))
+#Producing proportion matrices with appended data
+phylumProp.df <- countToProp(phylumCount.df)
+classProp.df <- countToProp(classCount.df)
+orderProp.df <- countToProp(orderCount.df)
+familyProp.df <- countToProp(familyCount.df)
+genusProp.df <- countToProp(genusCount.df)
+
+phylumProp_appended.df <- appendData(phylumProp.df)
+classProp_appended.df <- appendData(classProp.df)
+orderProp_appended.df <- appendData(orderProp.df)
+familyProp_appended.df <- appendData(familyProp.df)
+genusProp_appended.df <- appendData(genusProp.df)
+
+#Producing clinical data dataframe (including whether or not Lp299v was detected)
+genusCount_appended.df <- appendData(genusCount.df)
+clinical.df <- genusCount_appended.df %>%
+  select(-colnames(genusCount.df)) %>%
+  rownames_to_column(var = "ids")
+# genusCount.df <- select(genusCount.df, str_detect("Lactiplantibacillus", negate = TRUE))
 
 #Producing tidyMicro dataframe
 tidymicro.df <- tidy_micro(otu_tabs = list(Phylum = phylumOTU.df,

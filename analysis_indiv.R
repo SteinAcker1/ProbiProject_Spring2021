@@ -1,7 +1,5 @@
 source("script_local.R")
-library(ggfortify)
-library(viridis)
-theme_set(theme_bw())
+
 #Use this script to do analysis for individuals
 
 ### Preliminary DESeq2 code that may or may not be further developed
@@ -44,34 +42,6 @@ boxplot(fb[[1]],
 
 ### Getting taxon-level changes
 
-# Generating a sequence matrix with NAs scrubbed out at each taxonomic level
-seqsPhylum.df <- filterNA(quo(Phylum))
-seqsClass.df <- filterNA(quo(Class))
-seqsOrder.df <- filterNA(quo(Order))
-seqsFamily.df <- filterNA(quo(Family))
-seqsGenus.df <- filterNA(quo(Genus))
-
-# Creating new count matrices using the new scrubbed sequence matrices
-phylumCount.df <- countTaxa(taxa = taxa.df, seqs = seqsPhylum.df, level = "Phylum")
-classCount.df <- countTaxa(taxa = taxa.df, seqs = seqsClass.df, level = "Class")
-orderCount.df <- countTaxa(taxa = taxa.df, seqs = seqsOrder.df, level = "Order")
-familyCount.df <- countTaxa(taxa = taxa.df, seqs = seqsFamily.df, level = "Family")
-genusCount.df <- countTaxa(taxa = taxa.df, seqs = seqsGenus.df, level = "Genus")
-
-# Converting count matrices to proportion matrices
-phylumProp.df <- countToProp(phylumCount.df)
-classProp.df <- countToProp(classCount.df)
-orderProp.df <- countToProp(orderCount.df)
-familyProp.df <- countToProp(familyCount.df)
-genusProp.df <- countToProp(genusCount.df)
-
-# Appending clinical data to each proportion matrix
-phylumProp_appended.df <- appendData(phylumProp.df)
-classProp_appended.df <- appendData(classProp.df)
-orderProp_appended.df <- appendData(orderProp.df)
-familyProp_appended.df <- appendData(familyProp.df)
-genusProp_appended.df <- appendData(genusProp.df)
-
 # Performing statistical analysis on proportion matrices
 phylumChanges <- phylumProp_appended.df %>%
   getTaxonChange() %>%
@@ -90,21 +60,32 @@ genusChanges <- genusProp_appended.df %>%
   evalTaxonChange()
 
 # Analysis on L. plantarum
-
 Lplantarum.mat <- genusCount.df %>%
   appendData() %>%
   filterIncompletes() %>%
   findDiffs(measure = "Firmicutes/Bacilli/Lactobacillales/Lactobacillaceae/Lactiplantibacillus",
             fold = F)
 
+# Analysis on L. plantarum persistence
 Lp_present.df <- getLPstatus()
-with(Lp_present.df, chisq.test(Treatment, Lp_present))
+Lp.chisq <- with(Lp_present.df, chisq.test(Treatment, Lp_present))
+Lp_present_count.df <- Lp_present.df %>%
+  with(table(Treatment, Lp_present)) %>%
+  data.frame()
+ggplot(data = Lp_present_count.df, mapping = aes(x = Treatment, y = Freq, fill = Lp_present)) +
+  geom_bar(stat = "identity", position = "fill") +
+  ggtitle("Detection of L. plantarum by treatment",
+          subtitle = paste("p =", Lp.chisq$p.value)) +
+  scale_fill_viridis(discrete = TRUE)
 
+# Tests on other variables related to persistence
 Lp_present_active.df <- filter(Lp_present.df, Treatment == "Lp299v")
 with(Lp_present_active.df, chisq.test(Overweight, Lp_present))
 with(Lp_present_active.df, chisq.test(Site, Lp_present))
 with(Lp_present_active.df, chisq.test(Gender, Lp_present))
 t.test(BSF ~ Lp_present, data = Lp_present_active.df)
+
+otherGenera <- getDemographicDiff(genusProp_appended.df, var = "Lp_present", treat = "Lp299v")
 
 # Differences based on demographics
 test <- getDemographicDiff(phylumProp.df, "Gender")
@@ -113,21 +94,35 @@ test <- getDemographicDiff(phylumProp.df, "Gender")
 genusProp_appended_start.df <- filter(genusProp_appended.df, Treatment == "PreTrial_1")
 genusProp_appended_Lp299v.df <- filter(genusProp_appended.df, Treatment == "Lp299v")
 
-genus_Lp.pca <- prcomp(select(genusProp_appended_Lp299v.df, -c(colnames(clinical.df[,-1]), Lp_present,
-                                                            Firmicutes.Bacilli.Lactobacillales.Lactobacillaceae.Lactiplantibacillus)),
-                    scaled <- TRUE)
-autoplot(genus_Lp.pca, data = genusProp_appended_Lp299v.df, colour = 'Lp_present') +
-  ggtitle("Genus-level PCA")
+genusProp_appended_start_pca.df <- genusProp_appended_start.df %>%
+  select(-c(colnames(clinical.df[,-1]),
+            Lp_present,
+            Firmicutes.Bacilli.Lactobacillales.Lactobacillaceae.Lactiplantibacillus)) %>%
+  select_if(function(col) max(col) != 0)
 
-genus_start.pca <- prcomp(select(genusProp_appended_start.df, -c(colnames(clinical.df[,-1]), Lp_present,
-                                                               Firmicutes.Bacilli.Lactobacillales.Lactobacillaceae.Lactiplantibacillus)),
-                       scaled <- TRUE)
+genusProp_appended_Lp299v_pca.df <- genusProp_appended_Lp299v.df %>%
+  select(-c(colnames(clinical.df[,-1]),
+            Lp_present,
+            Firmicutes.Bacilli.Lactobacillales.Lactobacillaceae.Lactiplantibacillus)) %>%
+  select_if(function(col) max(col) != 0)
+
+genus_Lp.pca <- prcomp(genusProp_appended_Lp299v_pca.df,
+                       scale = TRUE)
+autoplot(genus_Lp.pca, data = genusProp_appended_Lp299v.df, colour = 'Lp_present') +
+  ggtitle("Genus-level scaled PCA",
+          subtitle = "Treatment phase") +
+  scale_color_viridis(discrete = TRUE)
+
+genus_start.pca <- prcomp(genusProp_appended_start_pca.df,
+                          scale = TRUE)
 autoplot(genus_start.pca, data = genusProp_appended_start.df, colour = 'BMI') +
-  ggtitle("Genus-level PCA") +
+  ggtitle("Genus-level PCA",
+          subtitle = "Testing Period 1") +
   scale_color_viridis(discrete = FALSE)
 autoplot(genus_start.pca, data = genusProp_appended_start.df, colour = 'Age') +
   ggtitle("Genus-level PCA") +
   scale_color_viridis(discrete = FALSE)
 autoplot(genus_start.pca, data = genusProp_appended_start.df, colour = 'Gender') +
-  ggtitle("Genus-level PCA") +
+  ggtitle("Genus-level scaled PCA",
+          subtitle = "Testing Period 1") +
   scale_color_viridis(discrete = TRUE)
