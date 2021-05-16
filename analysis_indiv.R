@@ -78,6 +78,33 @@ ggplot(data = Lp_present_count.df, mapping = aes(x = Treatment, y = Freq, fill =
           subtitle = paste("p =", Lp.chisq$p.value)) +
   scale_fill_viridis(discrete = TRUE)
 
+  # Differences between study periods
+Lp_present1.df <- Lp_present.df %>%
+  filter(TestingPeriod %in% c("1","2")) %>%
+  mutate(Treatment = ifelse(startsWith(Treatment, "Pre"), "PreTrial", Treatment))
+Lp1.chisq <- with(Lp_present1.df, chisq.test(Treatment, Lp_present))
+Lp_present_count1.df <- Lp_present1.df %>%
+  with(table(Treatment, Lp_present)) %>%
+  data.frame()
+ggplot(data = Lp_present_count1.df, mapping = aes(x = Treatment, y = Freq, fill = Lp_present)) +
+  geom_bar(stat = "identity", position = "fill") +
+  ggtitle("Detection of L. plantarum by treatment",
+          subtitle = "Study Period 1") +
+  scale_fill_viridis(discrete = TRUE)
+
+Lp_present2.df <- Lp_present.df %>%
+  filter(TestingPeriod %in% c("3","4")) %>%
+  mutate(Treatment = ifelse(startsWith(Treatment, "Pre"), "PreTrial", Treatment))
+Lp2.chisq <- with(Lp_present2.df, chisq.test(Treatment, Lp_present))
+Lp_present_count2.df <- Lp_present2.df %>%
+  with(table(Treatment, Lp_present)) %>%
+  data.frame()
+ggplot(data = Lp_present_count2.df, mapping = aes(x = Treatment, y = Freq, fill = Lp_present)) +
+  geom_bar(stat = "identity", position = "fill") +
+  ggtitle("Detection of L. plantarum by treatment",
+          subtitle = "Study Period 2") +
+  scale_fill_viridis(discrete = TRUE)
+
 # Tests on other variables related to persistence
 Lp_present_active.df <- filter(Lp_present.df, Treatment == "Lp299v")
 with(Lp_present_active.df, chisq.test(Overweight, Lp_present))
@@ -91,38 +118,39 @@ otherGenera <- getDemographicDiff(genusProp_appended.df, var = "Lp_present", tre
 test <- getDemographicDiff(phylumProp.df, "Gender")
 
 # Principal component analysis
-genusProp_appended_start.df <- filter(genusProp_appended.df, Treatment == "PreTrial_1")
-genusProp_appended_Lp299v.df <- filter(genusProp_appended.df, Treatment == "Lp299v")
-
-genusProp_appended_start_pca.df <- genusProp_appended_start.df %>%
-  select(-c(colnames(clinical.df[,-1]),
-            Lp_present,
-            Firmicutes.Bacilli.Lactobacillales.Lactobacillaceae.Lactiplantibacillus)) %>%
-  select_if(function(col) max(col) != 0)
-
-genusProp_appended_Lp299v_pca.df <- genusProp_appended_Lp299v.df %>%
-  select(-c(colnames(clinical.df[,-1]),
-            Lp_present,
-            Firmicutes.Bacilli.Lactobacillales.Lactobacillaceae.Lactiplantibacillus)) %>%
-  select_if(function(col) max(col) != 0)
-
-genus_Lp.pca <- prcomp(genusProp_appended_Lp299v_pca.df,
-                       scale = TRUE)
-autoplot(genus_Lp.pca, data = genusProp_appended_Lp299v.df, colour = 'Lp_present') +
-  ggtitle("Genus-level scaled PCA",
-          subtitle = "Treatment phase") +
-  scale_color_viridis(discrete = TRUE)
-
-genus_start.pca <- prcomp(genusProp_appended_start_pca.df,
-                          scale = TRUE)
-autoplot(genus_start.pca, data = genusProp_appended_start.df, colour = 'BMI') +
-  ggtitle("Genus-level PCA",
-          subtitle = "Testing Period 1") +
-  scale_color_viridis(discrete = FALSE)
-autoplot(genus_start.pca, data = genusProp_appended_start.df, colour = 'Age') +
-  ggtitle("Genus-level PCA") +
-  scale_color_viridis(discrete = FALSE)
-autoplot(genus_start.pca, data = genusProp_appended_start.df, colour = 'Gender') +
-  ggtitle("Genus-level scaled PCA",
-          subtitle = "Testing Period 1") +
-  scale_color_viridis(discrete = TRUE)
+## For now, this has been superseded by RDA
+# genusProp_appended_start.df <- filter(genusProp_appended.df, Treatment == "PreTrial_1")
+# genusProp_appended_Lp299v.df <- filter(genusProp_appended.df, Treatment == "Lp299v")
+# 
+# genusProp_appended_start_pca.df <- genusProp_appended_start.df %>%
+#   select(-c(colnames(clinical.df[,-1]),
+#             Lp_present,
+#             Firmicutes.Bacilli.Lactobacillales.Lactobacillaceae.Lactiplantibacillus)) %>%
+#   select_if(function(col) max(col) != 0)
+# 
+# genusProp_appended_Lp299v_pca.df <- genusProp_appended_Lp299v.df %>%
+#   select(-c(colnames(clinical.df[,-1]),
+#             Lp_present,
+#             Firmicutes.Bacilli.Lactobacillales.Lactobacillaceae.Lactiplantibacillus)) %>%
+#   select_if(function(col) max(col) != 0)
+# 
+# genus_Lp.pca <- prcomp(genusProp_appended_Lp299v_pca.df,
+#                        scale = TRUE)
+# autoplot(genus_Lp.pca, data = genusProp_appended_Lp299v.df, colour = 'Lp_present') +
+#   ggtitle("Genus-level scaled PCA",
+#           subtitle = "Treatment phase") +
+#   scale_color_viridis(discrete = TRUE)
+# 
+# genus_start.pca <- prcomp(genusProp_appended_start_pca.df,
+#                           scale = TRUE)
+# autoplot(genus_start.pca, data = genusProp_appended_start.df, colour = 'BMI') +
+#   ggtitle("Genus-level PCA",
+#           subtitle = "Testing Period 1") +
+#   scale_color_viridis(discrete = FALSE)
+# autoplot(genus_start.pca, data = genusProp_appended_start.df, colour = 'Age') +
+#   ggtitle("Genus-level PCA") +
+#   scale_color_viridis(discrete = FALSE)
+# autoplot(genus_start.pca, data = genusProp_appended_start.df, colour = 'Gender') +
+#   ggtitle("Genus-level scaled PCA",
+#           subtitle = "Testing Period 1") +
+#   scale_color_viridis(discrete = TRUE)

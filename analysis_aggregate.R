@@ -75,6 +75,15 @@ micro_forest(nb_order2, Treatment) + ggtitle("Forest plot of Lp299v strain impac
 
 ### Redundancy analysis ###
 
+# Comparing baselines
+
+genusProp_appended_baselines_pca.df <- filter(genusProp_appended.df, Treatment %in% c("PreTrial_2", "PreTrial_1")) %>%
+  select(-c(colnames(clinical.df[,-1])))
+clinical_baselines.df <- filter(clinical.df, Treatment %in% c("PreTrial_2", "PreTrial_1"))
+
+baselines.rda <- rda(genusProp_appended_baselines_pca.df ~ Treatment, data = clinical_baselines.df)
+baselines_rda.anova <- anova(baselines.rda)
+
 # Gender
 
 genusProp_appended_start.df <- filter(genusProp_appended.df, Treatment == "PreTrial_1")
@@ -108,13 +117,42 @@ lp299v.rda <- rda(genusProp_appended_Lp299v_pca.df ~ Lp_present,
                   data = clinical_Lp299v.df,
                   na.rm = TRUE)
 
-lp299v_rda_plot <- autoplot(lp299v.rda)
-lp299v_rda_plot$layers[[3]] <- NULL
+anova <- anova(lp299v.rda, permutations = 9999)
+RsquareAdj(lp299v.rda)
+lp299v_rda_plot <- autoplot(lp299v.rda, geom = "point")
+lp299v_rda_plot$layers[[1]]$geom$default_aes$size <- 1.5
+lp299v_rda_plot$layers[[1]]$geom$default_aes$fill <- "#FFFFFF"
 lp299v_rda_plot
-anova <- anova(lp299v.rda)
+
 #Note that ANOVA is calculated stochastically for RDA objects. Therefore, the one you calculate may vary slightly from the reported value.
 plot(lp299v.rda)
 title("Redundancy analysis on Lp299v treatment phase (Genus-level analysis)",
+      sub = paste("p =", anova$`Pr(>F)`[1]))
+
+# Lp299v/baseline
+clinical_Lp_baseline.df <- filter(clinical.df, (Treatment == "PreTrial_1" & TestingOrder == "Lp299v - Placebo") |
+                                    (Treatment == "PreTrial_2" & TestingOrder == "Placebo - Lp299v"))
+
+genusProp_appended_Lp_baseline_pca.df <- genusCount_appended.df %>%
+  filter((Treatment == "PreTrial_1" & TestingOrder == "Lp299v - Placebo") |
+           (Treatment == "PreTrial_2" & TestingOrder == "Placebo - Lp299v")) %>%
+  select(-c(colnames(clinical.df[,-1]),
+            Lp_present)) %>%
+  select_if(function(col) max(col) != 0) %>%
+  select(!ends_with("Lactiplantibacillus")) %>%
+  countToProp() #converting back to prop table after eliminating L. plantarum just to control for ANY extraneous impact of including Lp in calculations
+
+lp_baseline.rda <- rda(genusProp_appended_Lp_baseline_pca.df ~ Lp_present_treat,
+                  scale = TRUE,
+                  data = clinical_Lp_baseline.df,
+                  na.rm = TRUE)
+
+anova <- anova(lp_baseline.rda, permutations = 9999)
+RsquareAdj(lp_baseline.rda)
+
+#Note that ANOVA is calculated stochastically for RDA objects. Therefore, the one you calculate may vary slightly from the reported value.
+plot(lp_baseline.rda)
+title("Redundancy analysis on baseline (Genus-level analysis)",
       sub = paste("p =", anova$`Pr(>F)`[1]))
 
 ### Extraneous tidyMicro analyses involving probiotics ###
@@ -142,6 +180,15 @@ Lp299v_beta %>%
 ra_bars(tidymicro_Lp299v.df,
         table = "Genus",
         Lp_present,
+        top_taxa = 15)
+
+# Taxa barplot (comparing baselines)
+tidymicro_Lp_baseline.df <- filter(tidymicro.df, (Treatment == "PreTrial_1" & TestingOrder == "Lp299v - Placebo") |
+                                     (Treatment == "PreTrial_2" & TestingOrder == "Placebo - Lp299v"))
+
+ra_bars(tidymicro_Lp_baseline.df,
+        table = "Genus",
+        Lp_present_treat,
         top_taxa = 15)
 
 ### Analyses not involving probiotics ###

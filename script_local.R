@@ -1,16 +1,19 @@
 ### This script performs data fine-tuning in preparation for analysis. It can be run on a typical personal computer. ###
 source("funcLibrary.R")
+set.seed(456)
 theme_set(theme_bw())
 
 ### Initial data handling ###
 
 #Loading data and formatting it properly (this takes a little while)
-taxa.df <- read.csv("~/probiData/ProGastro17/output_silva_nospecies/probiTaxa.tsv", sep = "\t") %>%
+taxa.df <- read.csv("~/probiData/ProGastro17/output/probiTaxa.tsv", sep = "\t") %>%
+#taxa.df <- read.csv("~/probiData/ProGastro17/output_silva_nospecies/probiTaxa.tsv", sep = "\t") %>%
   mutate(Class = paste(Phylum, Class, sep = "/")) %>%
   mutate(Order = paste(Class, Order, sep = "/")) %>%
   mutate(Family = paste(Order, Family, sep = "/")) %>%
   mutate(Genus = paste(Family, Genus, sep = "/"))
-seqsRaw.df <- read.csv("~/probiData/ProGastro17/output_silva_nospecies/probiSeqs.tsv", sep = "\t")
+#seqsRaw.df <- read.csv("~/probiData/ProGastro17/output_silva_nospecies/probiSeqs.tsv", sep = "\t")
+seqsRaw.df <- read.csv("~/probiData/ProGastro17/output/probiSeqs.tsv", sep = "\t")
 
 #Getting a list of IDs
 ids <- c()

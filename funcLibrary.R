@@ -51,6 +51,18 @@ countToProp <- function(count) {
   return(prop.df)
 }
 
+# Generate a list of individuals who had L. plantarum present in gut in testing phase
+
+getLPstatusList <- function(df_appended) {
+  LpList <- df_appended %>%
+    filter(Treatment == "Lp299v") %>%
+    select(Participant, Lp_present) %>%
+    remove_rownames() %>%
+    column_to_rownames("Participant") %>%
+    t()
+  return(LpList)
+}
+
 # Appends clinical data to a given dataframe
 appendData <- function(df) {
   #Save Lp299v as a variable and see if it should be evaluated
@@ -145,7 +157,20 @@ appendData <- function(df) {
   df$Site <- Site
   df$BSF <- BSF
   df$Overweight <- Overweight
-  if(eval_Lp) df$Lp_present <- Lp_present
+  if(eval_Lp) {
+    df$Lp_present <- Lp_present
+    LpList.df <- getLPstatusList(df)
+    Lp_present_treat <- c()
+    for(i in df$Participant) {
+      print(i)
+      if(i %in% colnames(LpList.df)) {
+        Lp_present_treat <- c(Lp_present_treat, LpList.df[,i])
+      } else {
+        Lp_present_treat <- c(Lp_present_treat, NA)
+      }
+    }
+    df$Lp_present_treat <- Lp_present_treat
+  }
   #Return the altered dataframe
   return(df)
 }
@@ -315,7 +340,8 @@ getLPstatus <- function(df = genusProp_appended.df) {
 getDemographicDiff <- function(data.df, var, treat = "PreTrial_1") {
   treat.df <- data.df %>%
     appendData() %>%
-    filter(Treatment %in% treat)
+    filter(Treatment %in% treat) %>%
+    select_if(function(col) max(col) != 0)
   taxa <- setdiff(colnames(treat.df), c(colnames(clinical.df), "Lp_present"))
   tax_name <- c()
   group1_name <- c()
@@ -338,7 +364,7 @@ getDemographicDiff <- function(data.df, var, treat = "PreTrial_1") {
                            group2_name,
                            group2_mean,
                            p_value) %>%
-    mutate(p_adj = p.adjust(p_value, method = "bonferroni"))
+    mutate(p_adj = p.adjust(p_value, method = "fdr")) 
   return(results.df)
 }
 
