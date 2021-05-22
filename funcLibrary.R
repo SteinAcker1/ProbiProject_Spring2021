@@ -1,26 +1,14 @@
 # This script contains essential functions for other scripts to function
 library(tidyverse)
-library(tidyMicro) #This version of tidyMicro was downloaded directly from the CharlieCarpenter/tidyMicro GitHub repository on 19 April 2021, rather than the CRAN repository
-library(DESeq2)
+library(tidyMicro)
 library(vegan)
-library(ggvegan) #This version of tidyMicro was downloaded directly from the gavinsimpson/ggvegan GitHub repository on 10 May 2021
 library(viridis)
-library(ggfortify)
-
-# Eliminates reads which DADA2 failed to identify at the Order level or below
-filterNA <- function(taxlevel = quo(Order)) {
-  NAs <- taxa.df %>%
-    filter(endsWith(!!taxlevel, "NA")) %>%
-    rownames()
-  filteredSeqs.df <- seqsRaw.df[setdiff(colnames(seqsRaw.df),NAs)]
-  return(filteredSeqs.df)
-}
+library(ggrepel)
 
 # Converts DADA2 output to a count table
 countTaxa <- function(taxa, seqs, level) {
   count.df <- data.frame(row.names = rownames(seqs))
   sequences <- colnames(seqs)
-  N <- length(sequences)
   for(i in sequences) { 
     taxon <- taxa[level][i,]
     if(!is.na(taxon)) {
@@ -170,6 +158,9 @@ appendData <- function(df) {
       }
     }
     df$Lp_present_treat <- Lp_present_treat
+  } else if("Lp_present" %in% colnames(clinical.df)) {
+    df$Lp_present <- clinical.df$Lp_present
+    df$Lp_present_treat <- clinical.df$Lp_present_treat
   }
   #Return the altered dataframe
   return(df)
@@ -343,28 +334,56 @@ getDemographicDiff <- function(data.df, var, treat = "PreTrial_1") {
     filter(Treatment %in% treat) %>%
     select_if(function(col) max(col) != 0)
   taxa <- setdiff(colnames(treat.df), c(colnames(clinical.df), "Lp_present"))
-  tax_name <- c()
+  taxon <- c()
   group1_name <- c()
   group1_mean <- c()
   group2_name <- c()
   group2_mean <- c()
-  p_value <- c()
-  for(taxon in taxa) {
-    t_results <- t.test(eval(parse(text = taxon)) ~ eval(parse(text = var)), data = treat.df)
-    tax_name <- c(tax_name, taxon)
+  p_val <- c()
+  for(i in taxa) {
+    t_results <- t.test(eval(parse(text = i)) ~ eval(parse(text = var)), data = treat.df)
+    taxon <- c(taxon, i)
     group1_name <- c(group1_name, names(t_results$estimate[1]))
     group2_name <- c(group2_name, names(t_results$estimate[2]))
     group1_mean <- c(group1_mean, t_results$estimate[1])
     group2_mean <- c(group2_mean, t_results$estimate[2])
-    p_value <- c(p_value, t_results$p.value)
+    p_val <- c(p_val, t_results$p.value)
   }
-  results.df <- data.frame(tax_name,
+  results.df <- data.frame(taxon,
                            group1_name,
                            group1_mean,
                            group2_name,
                            group2_mean,
-                           p_value) %>%
-    mutate(p_adj = p.adjust(p_value, method = "fdr")) 
+                           p_val) %>%
+    mutate(p_adj = p.adjust(p_val, method = "fdr")) %>%
+    mutate(diff = group2_mean - group1_mean)
   return(results.df)
+}
+
+shiftRockyMtn <- function(data.changes) {
+  data.changes <- data.changes %>%
+    mutate(Phylum = taxon %>%
+             str_split("[:punct:]") %>%
+             lapply('[[', 1) %>%
+             unlist()
+    ) %>%
+    mutate(Lowest_level = taxon %>%
+             str_split("[:punct:]") %>%
+             lapply(tail, 1) %>%
+             unlist()
+    ) %>%
+    mutate(p_val = as.numeric(p_val)) %>%
+    mutate(diff = as.numeric(diff)) %>%
+    mutate(p_inv = 1 / p_val) %>%
+    mutate(p_log_inv = log10(p_inv) * sign(diff))
+    print(data.changes$Lowest_level)
+  p <- ggplot(data = data.changes, mapping = aes(x = taxon, y = p_log_inv)) +
+    theme(axis.text.x = element_blank()) +
+    geom_label_repel(data = filter(data.changes, p_val < 0.01),
+                     mapping = aes(label = Lowest_level)) +
+    geom_segment(mapping = aes(xend = taxon, yend = 0, color = Phylum)) +
+    geom_point(data = filter(data.changes, p_val < 0.01))
+  output <- list(data.changes, p)
+  return(output)
 }
 

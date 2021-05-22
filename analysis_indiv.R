@@ -112,10 +112,7 @@ with(Lp_present_active.df, chisq.test(Site, Lp_present))
 with(Lp_present_active.df, chisq.test(Gender, Lp_present))
 t.test(BSF ~ Lp_present, data = Lp_present_active.df)
 
-otherGenera <- getDemographicDiff(genusProp_appended.df, var = "Lp_present", treat = "Lp299v")
 
-# Differences based on demographics
-test <- getDemographicDiff(phylumProp.df, "Gender")
 
 # Principal component analysis
 ## For now, this has been superseded by RDA

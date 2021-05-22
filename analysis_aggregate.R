@@ -73,6 +73,23 @@ micro_rocky_mtn(nb_order2, Treatment, alpha = 0.001) + ggtitle("Rocky Mountain p
 micro_forest(nb_order2, Treatment) + ggtitle("Forest plot of Lp299v strain impact",
                                              subtitle = "Period 2, Order-level analysis")
 
+### Custom Rocky Mountain plots ###
+# Checking for differences during treatment
+rmplot_Lp_present <- orderProp.df %>%
+  getDemographicDiff(var = "Lp_present", treat = "Lp299v") %>%
+  filter(str_detect(taxon, "Lactiplantibacillus$", negate = TRUE)) %>%
+  shiftRockyMtn()
+# Checking for baseline differences
+rmplot_Lp_present_baseline <- genusProp_appended.df %>%
+  filter(Treatment %in% c("PreTrial_1", "PreTrial_2")) %>%
+  mutate(Treatment = ifelse((Treatment == "PreTrial_1" & TestingOrder == "Lp299v - Placebo") |
+                              (Treatment == "PreTrial_2" & TestingOrder == "Placebo - Lp299v"),
+         "PreLp299v",
+         "PrePlacebo")) %>%
+  getDemographicDiff(var = "Lp_present_active", treat = "PreLp299v") %>%
+  filter(str_detect(taxon, "Lactiplantibacillus$", negate = TRUE)) %>%
+  shiftRockyMtn()
+
 ### Redundancy analysis ###
 
 # Comparing baselines
@@ -179,8 +196,18 @@ Lp299v_beta %>%
 # Taxa barplot
 ra_bars(tidymicro_Lp299v.df,
         table = "Genus",
-        Lp_present,
-        top_taxa = 15)
+        Participant,
+        top_taxa = 10)
+
+ra_bars(filter(tidymicro_Lp299v.df, Lp_present == "yes"),
+        table = "Genus",
+        Participant,
+        top_taxa = 10)
+
+ra_bars(filter(tidymicro_Lp299v.df, Lp_present == "no"),
+        table = "Genus",
+        Lib,
+        top_taxa = 10)
 
 # Taxa barplot (comparing baselines)
 tidymicro_Lp_baseline.df <- filter(tidymicro.df, (Treatment == "PreTrial_1" & TestingOrder == "Lp299v - Placebo") |
