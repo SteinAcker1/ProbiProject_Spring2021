@@ -1,9 +1,8 @@
 ### This script performs initial data handling using FASTQ data. It is VERY computationally intensive and should be run on a very powerful computer. ###
 
-set.seed(123)
-library(dada2)
+set.seed(456)
 
-path <- "~/probiData/ProGastro17"
+path <- "data/"
 
 #Separating forward and reverse reads
 fnFs <- sort(list.files(path, pattern="_1.fastq.gz", full.names = TRUE))
@@ -41,12 +40,12 @@ seqtab <- makeSequenceTable(mergers)
 
 #Removing chimeras
 seqtab.nochim <- removeBimeraDenovo(seqtab, method="consensus", multithread=TRUE, verbose=TRUE)
-seqPath <- file.path(path, "output", "probiSeqs.tsv")
+seqPath <- file.path(path, "processed", "probiSeqs.tsv")
 write.table(seqtab.nochim, file = seqPath, sep = "\t")
 
 #Assigning taxonomy with Silva database
-taxa <- assignTaxonomy(seqtab.nochim, "~/taxa_dada2/silva_nr99_v138.1_wSpecies_train_set.fa.gz", multithread=TRUE)
-taxaPath <- file.path(path, "output", "probiTaxa.tsv")
+taxa <- assignTaxonomy(seqtab.nochim, "refTaxa/silva_nr99_v138.1_wSpecies_train_set.fa.gz", multithread=TRUE)
+taxaPath <- file.path(path, "processed", "probiTaxa.tsv")
 write.table(taxa, file = taxaPath, sep = "\t")
 
 

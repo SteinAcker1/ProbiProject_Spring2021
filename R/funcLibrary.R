@@ -1,9 +1,5 @@
 # This script contains essential functions for other scripts to function
-library(tidyverse)
-library(tidyMicro)
-library(vegan)
-library(viridis)
-library(ggrepel)
+
 
 # Converts DADA2 output to a count table
 countTaxa <- function(taxa, seqs, level) {
@@ -158,9 +154,11 @@ appendData <- function(df) {
       }
     }
     df$Lp_present_treat <- Lp_present_treat
-  } else if("Lp_present" %in% colnames(clinical.df)) {
+  } else if(exists("clinical.df")) {
+    if("Lp_present" %in% colnames(clinical.df)) {
     df$Lp_present <- clinical.df$Lp_present
     df$Lp_present_treat <- clinical.df$Lp_present_treat
+    }
   }
   #Return the altered dataframe
   return(df)
@@ -329,11 +327,12 @@ getLPstatus <- function(df = genusProp_appended.df) {
 }
 
 getDemographicDiff <- function(data.df, var, treat = "PreTrial_1") {
+  var_sym <- rlang::sym(var)
   treat.df <- data.df %>%
-    appendData() %>%
-    filter(Treatment %in% treat) %>%
-    select_if(function(col) max(col) != 0)
-  taxa <- setdiff(colnames(treat.df), c(colnames(clinical.df), "Lp_present"))
+    filter(Treatment %in% treat)%>%
+    filter(!is.na(!!var_sym)) %>%
+    select_if(function(col) max(col, na.rm = TRUE) != 0)
+  taxa <- setdiff(colnames(treat.df), c(colnames(clinical.df)))
   taxon <- c()
   group1_name <- c()
   group1_mean <- c()

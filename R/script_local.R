@@ -6,7 +6,7 @@ theme_set(theme_bw())
 ### Initial data handling ###
 
 #Loading data and formatting it properly (this takes a little while)
-taxa.df <- read.csv("~/probiData/ProGastro17/output/probiTaxa.tsv", sep = "\t")
+taxa.df <- read.csv("data/processed/probiTaxa.tsv", sep = "\t")
 taxa_rownames <- rownames(taxa.df)
 taxa.df <- taxa.df %>%
 #taxa.df <- read.csv("~/probiData/ProGastro17/output_silva_nospecies/probiTaxa.tsv", sep = "\t") %>%
@@ -19,7 +19,7 @@ taxa.df <- taxa.df %>%
   mutate(Family = paste(Order, Family, sep = "/")) %>%
   mutate(Genus = paste(Family, Genus, sep = "/"))
 #seqsRaw.df <- read.csv("~/probiData/ProGastro17/output_silva_nospecies/probiSeqs.tsv", sep = "\t")
-seqs.df <- read.csv("~/probiData/ProGastro17/output/probiSeqs.tsv", sep = "\t")
+seqs.df <- read.csv("data/processed/probiSeqs.tsv", sep = "\t")
 
 #Getting a list of IDs
 ids <- c()
@@ -30,14 +30,11 @@ for(name in rownames(seqs.df)) {
 }
 rownames(seqs.df) <- ids
 
-#Remove the reads where Order was not identified to clean data up
-#seqs.df <- filterNA() #I don't think this is needed anymore
-
 #Cleaning up the demographic data so that it can be used in analysis
-demographics.df <- read.csv("~/probiData/ProGastro17/otherInfo/probiDemographics.csv")
+demographics.df <- read.csv("data/raw/probiDemographics.csv")
 demographics.df$Screening.number <- as.character(demographics.df$Screening.number)
 demographics.df$Overweight <- with(demographics.df, ifelse(BMI > 25, TRUE, FALSE))
-BSF.df <- read.csv("~/probiData/ProGastro17/otherInfo/probiBSF.csv")
+BSF.df <- read.csv("data/raw/probiBSF.csv")
 BSF.df$Screening.number <- as.character(BSF.df$Screening.number)
 
 ### Creating dataframes to be used in analysis ###
@@ -67,9 +64,7 @@ orderProp.df <- countToProp(orderCount.df)
 familyProp.df <- countToProp(familyCount.df)
 genusProp.df <- countToProp(genusCount.df)
 
-print("Hello! I think the error is happening here. Is it?")
 phylumProp_appended.df <- appendData(phylumProp.df)
-print("Nope, it's not")
 classProp_appended.df <- appendData(classProp.df)
 orderProp_appended.df <- appendData(orderProp.df)
 familyProp_appended.df <- appendData(familyProp.df)
@@ -92,7 +87,7 @@ tidymicro.df <- tidy_micro(otu_tabs = list(Phylum = phylumOTU.df,
                         complete_clinical = TRUE,
                         library_name = "ids")
 
-#Splitting tidyMicro dataframe into testing periods
+# Splitting tidyMicro dataframe into testing periods
 tidymicro1.df <- tidymicro.df %>%
   filter(TestingPeriod %in% c("1","2")) %>%
   mutate(Treatment = factor(Treatment, levels = c("PreTrial_1", "Placebo", "Lp299v")))
@@ -101,14 +96,14 @@ tidymicro2.df <- tidymicro.df %>%
   filter(TestingPeriod %in% c("3","4")) %>%
   mutate(Treatment = factor(Treatment, levels = c("PreTrial_2", "Placebo", "Lp299v")))
 
-### Old code that may be recycled in the future ###
+# Splitting tidyMicro dataframe into relevant treatments
+tidymicro_Lp299v.df <- filter(tidymicro.df, Treatment == "Lp299v")%>%
+  mutate(Overweight = factor(ifelse(Overweight, "yes", "no"))) %>%
+  mutate(Lp_present = factor(ifelse(Lp_present, "yes", "no"))) %>%
+  mutate(Gender = factor(Gender))
 
-#Converting count matrices to proportion matrices
-# phylumProp.df <- countToProp(phylumCount.df)
-# genusProp.df <- countToProp(genusCount.df)
-# 
-# phylumProp_appended.df <- appendData(phylumProp.df)
-# genusProp_appended.df <- appendData(genusProp.df)
-# 
-# phylumProp_appended.df$FBratio <- log2(phylumProp_appended.df$Firmicutes / phylumProp_appended.df$Bacteroidota)
-
+tidymicro_Lp_baseline.df <- filter(tidymicro.df, (Treatment == "PreTrial_1" & TestingOrder == "Lp299v - Placebo") |
+                                     (Treatment == "PreTrial_2" & TestingOrder == "Placebo - Lp299v")) %>%
+  mutate(Overweight = factor(ifelse(Overweight, "yes", "no"))) %>%
+  mutate(Lp_present = factor(ifelse(Lp_present, "yes", "no"))) %>%
+  mutate(Gender = factor(Gender))
