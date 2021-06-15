@@ -30,7 +30,7 @@ plantarum *probiotic strain Lp299v in the human digestive tract*. The following 
 
 4) script_local.R: Data wrangling and cleanup (may be run on local computer).
 
-5) paperScript.R: Performs all analyses used in paper.
+5) paperScript.R: Performs all analyses used in paper. Figures are saved to the "output" directory, while statistics are outputted to the console.
 
 ## Instructions for use
 1) Ensure you have the right R version on your computer (4.1.0). If you have conda installed, this can be easily done with:
