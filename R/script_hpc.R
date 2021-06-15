@@ -1,8 +1,8 @@
 ### This script performs initial data handling using FASTQ data. It is VERY computationally intensive and should be run on a very powerful computer. ###
-
+source("funcLibrary.R")
 set.seed(456)
 
-path <- "data/"
+path <- "../data/"
 
 #Separating forward and reverse reads
 fnFs <- sort(list.files(path, pattern="_1.fastq.gz", full.names = TRUE))
@@ -44,7 +44,7 @@ seqPath <- file.path(path, "processed", "probiSeqs.tsv")
 write.table(seqtab.nochim, file = seqPath, sep = "\t")
 
 #Assigning taxonomy with Silva database
-taxa <- assignTaxonomy(seqtab.nochim, "refTaxa/silva_nr99_v138.1_wSpecies_train_set.fa.gz", multithread=TRUE)
+taxa <- assignTaxonomy(seqtab.nochim, "../refTaxa/silva_nr99_v138.1_wSpecies_train_set.fa.gz", multithread=TRUE)
 taxaPath <- file.path(path, "processed", "probiTaxa.tsv")
 write.table(taxa, file = taxaPath, sep = "\t")
 

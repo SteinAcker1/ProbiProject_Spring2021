@@ -187,7 +187,7 @@ Fig2.df <- Lp_present_count.df %>%
   filter(Lp_present == TRUE) %>%
   select(-Lp_present)
 
-jpeg(filename = "output/Fig2.jpeg", width = 667, height = 453)
+jpeg(filename = "../output/Fig2.jpeg", width = 667, height = 453)
 ggplot(data = Fig2.df, mapping = aes(fill = TestingOrder, y = pct, x = Treatment)) +
   geom_bar(stat = "identity", position = "dodge")
 dev.off()
@@ -199,7 +199,7 @@ rmplot_Lp_present <- genusProp_appended.df %>%
   filter(str_detect(taxon, "Lactiplantibacillus$", negate = TRUE)) %>%
   shiftRockyMtn()
 
-jpeg(filename = "output/Fig3A.jpeg", width = 667, height = 453)
+jpeg(filename = "../output/Fig3A.jpeg", width = 667, height = 453)
 genusRockymtnLp299vpresence <- rmplot_Lp_present[[2]] +
   ylab(TeX(r"($log(1/p) * sgn(\Delta)$)")) +
   labs(tag = "A")
@@ -216,7 +216,7 @@ rmplot_Lp_present_baseline <- genusProp_appended.df %>%
   filter(str_detect(taxon, "Lactiplantibacillus$", negate = TRUE)) %>%
   shiftRockyMtn()
 
-jpeg(filename = "output/Fig3B.jpeg", width = 667, height = 453)
+jpeg(filename = "../output/Fig3B.jpeg", width = 667, height = 453)
 genusRockymtnLp299vpresence_baseline <- rmplot_Lp_present_baseline[[2]] +
   ylab(TeX(r"($log(1/p) * sgn(\Delta)$)")) +
   labs(tag = "B")
@@ -230,14 +230,14 @@ genus_alpha_boxplot.df <- genus_alpha.df %>%
   mutate(Treatment = ifelse(Treatment == "Lp299v", Treatment, "Baseline")) %>%
   filter(!is.na(Lp_present_treat))
 
-jpeg(filename = "output/Fig4.jpeg", width = 667, height = 453)
+jpeg(filename = "../output/Fig4.jpeg", width = 667, height = 453)
 ggplot(data = genus_alpha_boxplot.df, mapping = aes(x = Treatment, y = ShannonH, fill = Lp_present_treat)) +
   geom_boxplot()
 dev.off()
 
 # Supp. fig. 1A
 
-jpeg(filename = "output/suppFig1A.jpeg", width = 667, height = 453)
+jpeg(filename = "../output/suppFig1A.jpeg", width = 667, height = 453)
 ra_bars(tidymicro_Lp299v.df,
         table = "Genus",
         Lp_present_treat,
@@ -247,7 +247,7 @@ dev.off()
 
 # Supp. fig. 1B
 
-jpeg(filename = "output/suppFig1B.jpeg", width = 667, height = 453)
+jpeg(filename = "../output/suppFig1B.jpeg", width = 667, height = 453)
 ra_bars(tidymicro_Lp_baseline.df,
         table = "Genus",
         Lp_present_treat,
@@ -257,10 +257,12 @@ dev.off()
 
 # Supp. fig. 2
 
-jpeg(filename = "output/suppFig2.jpeg", width = 667, height = 453)
+jpeg(filename = "../output/suppFig2.jpeg", width = 667, height = 453)
 Lp299v_beta <- beta_div(tidymicro_Lp299v.df, table = "Genus", method = "bray")
 Lp299v_beta %>%
   beta_heatmap(micro_set = tidymicro_Lp299v.df, Lp_present) +
   scale_fill_viridis(option = "magma")
 dev.off()
 
+# Outputting clinical data TSV
+write.table(clinical.df, file = "../output/ProGastro17_demographics.tsv", sep = "\t", row.names = FALSE)

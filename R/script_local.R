@@ -1,12 +1,11 @@
 ### This script performs data fine-tuning in preparation for analysis. It can be run on a typical personal computer. ###
-source("funcLibrary.R")
-set.seed(456)
+source("script_hpc.R")
 theme_set(theme_bw())
 
 ### Initial data handling ###
 
 #Loading data and formatting it properly (this takes a little while)
-taxa.df <- read.csv("data/processed/probiTaxa.tsv", sep = "\t")
+taxa.df <- read.csv("../data/processed/probiTaxa.tsv", sep = "\t")
 taxa_rownames <- rownames(taxa.df)
 taxa.df <- taxa.df %>%
 #taxa.df <- read.csv("~/probiData/ProGastro17/output_silva_nospecies/probiTaxa.tsv", sep = "\t") %>%
@@ -19,7 +18,7 @@ taxa.df <- taxa.df %>%
   mutate(Family = paste(Order, Family, sep = "/")) %>%
   mutate(Genus = paste(Family, Genus, sep = "/"))
 #seqsRaw.df <- read.csv("~/probiData/ProGastro17/output_silva_nospecies/probiSeqs.tsv", sep = "\t")
-seqs.df <- read.csv("data/processed/probiSeqs.tsv", sep = "\t")
+seqs.df <- read.csv("../data/processed/probiSeqs.tsv", sep = "\t")
 
 #Getting a list of IDs
 ids <- c()
@@ -31,10 +30,10 @@ for(name in rownames(seqs.df)) {
 rownames(seqs.df) <- ids
 
 #Cleaning up the demographic data so that it can be used in analysis
-demographics.df <- read.csv("data/raw/probiDemographics.csv")
+demographics.df <- read.csv("../data/probiDemographics.csv")
 demographics.df$Screening.number <- as.character(demographics.df$Screening.number)
 demographics.df$Overweight <- with(demographics.df, ifelse(BMI > 25, TRUE, FALSE))
-BSF.df <- read.csv("data/raw/probiBSF.csv")
+BSF.df <- read.csv("../data/probiBSF.csv")
 BSF.df$Screening.number <- as.character(BSF.df$Screening.number)
 
 ### Creating dataframes to be used in analysis ###

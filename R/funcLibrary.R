@@ -1,5 +1,13 @@
 # This script contains essential functions for other scripts to function
 
+# Getting packages set up
+library(dada2, quietly = TRUE)
+library(tidyverse, quietly = TRUE)
+library(tidyMicro, quietly = TRUE)
+library(vegan, quietly = TRUE)
+library(viridis, quietly = TRUE)
+library(ggrepel, quietly = TRUE)
+library(latex2exp, quietly = TRUE)
 
 # Converts DADA2 output to a count table
 countTaxa <- function(taxa, seqs, level) {

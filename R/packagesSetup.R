@@ -16,11 +16,3 @@ devtools::install_version("viridis", version = "0.6.1", repos="http://cran.us.r-
 devtools::install_version("tidyMicro", version = "1.47", repos="http://cran.us.r-project.org", quiet = TRUE)
 devtools::install_version("latex2exp", version = "0.5.0", repos="http://cran.us.r-project.org", quiet = TRUE)
 
-# Loading packages
-library(dada2, quietly = TRUE)
-library(tidyverse, quietly = TRUE)
-library(tidyMicro, quietly = TRUE)
-library(vegan, quietly = TRUE)
-library(viridis, quietly = TRUE)
-library(ggrepel, quietly = TRUE)
-library(latex2exp, quietly = TRUE)

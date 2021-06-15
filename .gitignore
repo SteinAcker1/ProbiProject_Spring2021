@@ -2,5 +2,3 @@
 .Rhistory
 .RData
 .Ruserdata
-R/analysis_aggregate.R
-R/analysis_indiv.R
