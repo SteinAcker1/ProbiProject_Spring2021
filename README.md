@@ -20,17 +20,17 @@ plantarum *probiotic strain Lp299v in the human digestive tract*. The following 
 
 - latex2exp (v. 0.5.0): a package which allows the user to add LaTeX text to ggplot2 objects.
 
-## Scripts Guide
+## Workflow
 
-- packageSetup.R: Sets up all required packages.
+1) packageSetup.R: Sets up all required packages.
 
-- funcLibrary.R: Defines a variety of functions to be used by the program.
+2) funcLibrary.R: Defines a variety of functions to be used by the program.
 
-- script_hpc.R: DADA2 pipeline for taxon assignment (should be run on a very powerful computer).
+3) script_hpc.R: DADA2 pipeline for taxon assignment (should be run on a very powerful computer).
 
-- script_local.R: Data wrangling and cleanup (may be run on local computer).
+4) script_local.R: Data wrangling and cleanup (may be run on local computer).
 
-- paperScript.R: Performs all analyses used in paper.
+5) paperScript.R: Performs all analyses used in paper.
 
 ## Instructions for use
 1) Ensure you have the right R version on your computer (4.1.0). If you have conda installed, this can be easily done with:
