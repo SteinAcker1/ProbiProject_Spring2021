@@ -88,7 +88,6 @@ plantarum *probiotic strain Lp299v in the human digestive tract*. The following 
         │   ├── Fig3A.jpeg
         │   ├── Fig3B.jpeg
         │   ├── Fig4.jpeg
-        │   ├── statistics.txt
         │   ├── suppFig1A.jpeg
         │   ├── suppFig1B.jpeg
         │   └── suppFig2.jpeg
