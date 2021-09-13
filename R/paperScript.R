@@ -1,5 +1,5 @@
 source("script_local.R")
-
+dir.create("../output")
 ### Basic demographic info (Table 1 data) ###
 
 # Age by group
@@ -200,7 +200,7 @@ rmplot_Lp_present <- genusProp_appended.df %>%
   shiftRockyMtn()
 
 jpeg(filename = "../output/Fig3A.jpeg", width = 667, height = 453)
-genusRockymtnLp299vpresence <- rmplot_Lp_present[[2]] +
+rmplot_Lp_present[[2]] +
   ylab(TeX(r"($log(1/p) * sgn(\Delta)$)")) +
   labs(tag = "A")
 dev.off()
@@ -217,7 +217,7 @@ rmplot_Lp_present_baseline <- genusProp_appended.df %>%
   shiftRockyMtn()
 
 jpeg(filename = "../output/Fig3B.jpeg", width = 667, height = 453)
-genusRockymtnLp299vpresence_baseline <- rmplot_Lp_present_baseline[[2]] +
+rmplot_Lp_present_baseline[[2]] +
   ylab(TeX(r"($log(1/p) * sgn(\Delta)$)")) +
   labs(tag = "B")
 dev.off()
