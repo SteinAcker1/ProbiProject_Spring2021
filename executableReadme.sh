@@ -5,6 +5,7 @@ DATE: 9 June 2021
 REQUIRED R VERSION: 4.1.0
 INSTRUCTIONS FOR USE:
 1) Ensure you have the right R version on your computer (4.1.0)
+	1a) Required dependencies can be installed via conda using 'conda install -c conda-forge r-base=4.1.0 libgit2=1.1.1'
 2) Ensure you have access to the internet during analysis
 3) Ensure your file tree matches the one below (reference taxa may be downloaded with 'wget https://zenodo.org/record/4587955/files/silva_nr99_v138.1_wSpecies_train_set.fa.gz', participant data must be accessed from Probi)
 4) Navigate to the directory you are using for analysis
@@ -47,6 +48,8 @@ RESULTING FILE TREE:
 └── refTaxa
     └── silva_nr99_v138.1_wSpecies_train_set.fa.gz"
 
+mkdir data/processed
+
 echo '# Installing from Bioconductor
 if(!requireNamespace("BiocManager", quietly = TRUE)) {
   install.packages("BiocManager", repos="http://cran.us.r-project.org", quiet = TRUE)
@@ -56,7 +59,7 @@ BiocManager::install("dada2")
 
 # Installing from CRAN
 if(!requireNamespace("devtools", quietly = TRUE)) {
-  install.packages("devtools", repos="http://cran.us.r-project.org", quiet = TRUE)
+  install.packages("devtools", repos = "http://cran.us.r-project.org", quiet = TRUE)
 }
 devtools::install_version("tidyverse", version = "1.3.1", repos="http://cran.us.r-project.org", quiet = TRUE)
 devtools::install_version("vegan", version = "2.5.7", repos="http://cran.us.r-project.org", quiet = TRUE)
@@ -78,7 +81,7 @@ library(latex2exp, quietly = TRUE)
 
 set.seed(456)
 
-path <- "data/"
+path <- "data"
 
 #Separating forward and reverse reads
 fnFs <- sort(list.files(path, pattern="_1.fastq.gz", full.names = TRUE))
@@ -706,6 +709,8 @@ Lp299v_beta %>%
   beta_heatmap(micro_set = tidymicro_Lp299v.df, Lp_present) +
   scale_fill_viridis(option = "magma")
 dev.off()' | R --save
+
+mkdir output
 
 echo '
 library(tidyverse, quietly = TRUE)
